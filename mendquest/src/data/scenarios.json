@@ -1,0 +1,12 @@
+/**
+ * Static list of practice scenarios.
+ *
+ * Each scenario contains:
+ * - id
+ * - realm
+ * - difficulty
+ * - emotion tag
+ * - description
+ *
+ * Used only in Play Mode.
+ */
