@@ -5,9 +5,10 @@
  * - generateDraftOptions()
  * - roleplayReply()
  */
-import { RunAnywhere, SDKEnvironment, ModelCategory, GenerationOptions } from '@runanywhere/core';
+import { RunAnywhere, SDKEnvironment, ModelCategory, type GenerationOptions } from '@runanywhere/core';
 import { LlamaCPP } from '@runanywhere/llamacpp';
 import { ONNX, ModelArtifactType } from '@runanywhere/onnx';
+import {buildDraftOptionsPrompt, buildRoleplayPrompt, buildScenarioGenPrompt, type Goal, type Relationship, type OtherPersonVibe, type ScenarioRealm, type Scenario} from './prompts';
 
 type InitStatus = "not_started" | "initializing" | "ready" | "error";
 
@@ -89,6 +90,7 @@ export function initRunAnywhere(): Promise<void> {
         } catch (e) {
             status = "error";
             initError = e;
+            initPromise = null;
             console.error("[RunAnywhere] init failed:", e);
             throw e;
         }
@@ -136,23 +138,11 @@ export async function ensureLLMLoaded(): Promise<void> {
     console.log("[RunAnywhere] Loaded model:", chosen.id);
 }
 
-function buildJSONPrompt(schematic: string, task: string) {
-    return `You must return ONLY a valid JSON. No markdown. No extra keys.
-    Schema:
-    ${schematic}
-    
-    Task:
-    ${task}`.trim();
-}
-
 async function generateJSON<T>(
-    task: string,
-    schematic: string,
+    prompt: string,
     options?: Partial<GenerationOptions>
 ): Promise<T> {
     await ensureLLMLoaded();
-
-    const prompt = buildJSONPrompt(schematic, task);
 
     const result = await RunAnywhere.generateWithTools(prompt, {
         autoExecute: false,
@@ -182,29 +172,13 @@ export type DraftOption = {
 
 export async function generateDraftOptions(input: {
     scenario: string;
-    goal: "Reconnect" | "Apologize" | "Set Boundary" | "Clarify";
-    relationship?: "Friend" | "Partner" | "Family" | "Work/School" | "Roommate";
+    goal: Goal;
+    relationship?: Relationship;
 }): Promise<{options: DraftOption[]}> {
-    const schematic = `
-    {
-        "options": [
-            { "label": "Soft Repair", "text": "string", "whyItWorks": "string"},
-            { "label": "Boundary + Respect", "text": "string", "whyItWorks": "string"},
-            { "label": "Direct & Clear", "text": "string", "whyItWorks": "string" }
-            ]
-    }
-    `.trim();
-
-    const task = `
-    Write 3 short message drafts (2-5 sentences) for this situation.
-    Keep tone calm, human, and realistic (not therapy jargon).
-    No manipulation or guilt-tripping.
-    Goal: ${input.goal}
-    Relationship: ${input.relationship ?? "Unspecified"}
-    Scenario: ${input.scenario}`.trim();
+    const prompt = buildDraftOptionsPrompt(input);
 
     try {
-        return await generateJSON<{options: DraftOption[]}>(task, schematic, {
+        return await generateJSON<{options: DraftOption[]}>(prompt, {
             temperature: 0.5,
             maxTokens: 700,
         });
@@ -249,28 +223,17 @@ export async function speakText(text: string) {
 export async function roleplayReply(input: {
     scenario: string;
     userMessage: string;
-    otherPersonVibe?: "defensive" | "hurt" | "busy" | "confused";
+    otherPersonVibe?: OtherPersonVibe;
     speak?: boolean;
 }): Promise<{reply: string; stability: number}> {
-    const schematic = `
-    { "reply": "string", "stability": 0}`.trim();
-
-    const task = `
-    Roleplay as the other person in this scenario.
-    Reply in 1-3 short messages.
-    Be realistic and not overly nice.
-    Return stability score 0-100 where:
-    0 = conversation likely ends badly
-    100 = conversation likely mends well
-    
-    Other persn vibe: ${input.otherPersonVibe ?? "unspecified"}
-    
-    Scenario: ${input.scenario}
-    
-    User message: ${input.userMessage}`.trim();
+    const prompt = buildRoleplayPrompt({
+        scenario: input.scenario,
+        userMessage: input.userMessage,
+        otherPersonVibe: input.otherPersonVibe,
+    });
 
     try {
-        const out = await generateJSON<{reply: string; stability: number}>(task, schematic, {
+        const out = await generateJSON<{reply: string; stability: number}>(prompt, {
             temperature: 0.6,
             maxTokens: 300,
         });
@@ -281,8 +244,50 @@ export async function roleplayReply(input: {
         }
         return out;
     } catch (e) {
-        return {
-            reply: "I hear you. I need a little time to think about this.", stability: 55
-        };
+        const fallback =  {reply: "I hear you. I need a little time to think about this.", stability: 55};
+        if (input.speak) {
+            await speakText(fallback.reply);
+        }
+        return fallback;
     }
+}
+
+export async function generateScenario(input: {
+    realm: ScenarioRealm;
+    difficulty: 1 | 2 | 3 | 4 | 5;
+}): Promise<Scenario> {
+    const prompt = buildScenarioGenPrompt({realm: input.realm as Exclude<Relationship, "Unspecified">,
+        difficulty: input.difficulty,
+    });
+    
+    try {
+        const out = await generateJSON<Scenario>(prompt, {
+            temperature: 0.8,
+            maxTokens: 250,
+        });
+
+        const realm = out?.scenario?.realm;
+        const diff = out?.scenario?.difficulty;
+        const desc = out?.scenario?.description;
+
+        if (!realm || !diff || !desc) {
+            throw new Error("Scenario JSON missing required fields");
+        }
+
+        out.scenario.difficulty = Math.max(1, Math.min(5, out.scenario.difficulty)) as 1|2|3|4|5;
+        
+        out.scenario.emotion = (out.scenario.emotion ?? "").trim();
+        out.scenario.description = out.scenario.description.trim();
+
+        return out;
+    } catch (e) {
+        return {
+            scenario: {
+                realm: input.realm,
+                difficulty: input.difficulty,
+                emotion: "frustrated",
+                description: "You texted a friend about plans, and they left you on read all day. Later, you see them posting online like nothing happened. You want to respond without starting a fight, but you also don't want to ignore it.",
+            },
+        };
+    } 
 }
