@@ -107,7 +107,7 @@ export function scoreMessage(message: string): ScoreResult {
     const normalized = message.toLowerCase().trim();
 
     let heat = 0;
-    let repair = 100;
+    let repair = 0;
     const heatTriggers: string[] = [];
     const repairTriggers: string[] = [];
 
