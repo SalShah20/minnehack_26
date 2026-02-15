@@ -231,10 +231,26 @@ export async function generateDraftOptions(input: {
     }
 }
 
+export async function speakText(text: string) {
+    await initRunAnywhere();
+    const clean = text.trim();
+
+    if (!clean)
+        return;
+
+    const speaking = await RunAnywhere.isSpeaking();
+    if (speaking) {
+        await RunAnywhere.stopSpeaking();
+    }
+
+    await RunAnywhere.speak(clean, {rate: 1.0, pitch: 1.0, volume: 1.0});
+}
+
 export async function roleplayReply(input: {
     scenario: string;
     userMessage: string;
     otherPersonVibe?: "defensive" | "hurt" | "busy" | "confused";
+    speak?: boolean;
 }): Promise<{reply: string; stability: number}> {
     const schematic = `
     { "reply": "string", "stability": 0}`.trim();
@@ -260,6 +276,9 @@ export async function roleplayReply(input: {
         });
 
         out.stability = Math.max(0, Math.min(100, Math.round(out.stability)));
+        if (input.speak) {
+            await speakText(out.reply);
+        }
         return out;
     } catch (e) {
         return {
@@ -267,4 +286,3 @@ export async function roleplayReply(input: {
         };
     }
 }
-

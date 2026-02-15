@@ -72,6 +72,7 @@ How to use it:
 const result = await roleplayReply({
   scenario: "the scenario",
   userMessage: "what the user said",
+  speak: "true if u want it to talk out loud, false otherwise"
 });
 ```
 
