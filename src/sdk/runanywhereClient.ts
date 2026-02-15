@@ -256,7 +256,7 @@ export async function generateScenario(input: {
     realm: ScenarioRealm;
     difficulty: 1 | 2 | 3 | 4 | 5;
 }): Promise<Scenario> {
-    const prompt = buildScenarioGenPrompt({realm: input.realm as Exclude<Relationship, "Unspecified">,
+    const prompt = buildScenarioGenPrompt({realm: input.realm,
         difficulty: input.difficulty,
     });
     

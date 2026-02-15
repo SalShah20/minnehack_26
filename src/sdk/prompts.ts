@@ -142,7 +142,7 @@ export function buildRoleplayPrompt(input: {
 export const SCENARIO_GENERATION_SCHEMATIC = `
 {
     "scenario": {
-        "realm": "Friend|Family|Partner|Work/School|Roommate",
+        "realm": "Friend",
         "difficulty": 1,
         "emotion": "string",
         "description": "string"
@@ -150,7 +150,7 @@ export const SCENARIO_GENERATION_SCHEMATIC = `
 }`.trim();
 
 export function scenarioGenTask(input: {
-    realm: Exclude<Relationship, "Unspecified">;
+    realm: ScenarioRealm;
     difficulty: 1 | 2 | 3 | 4 | 5;
 }): string {
     return `
@@ -160,6 +160,7 @@ export function scenarioGenTask(input: {
     Difficulty: ${input.difficulty}
     
     Constraints:
+    - Realm must be one of: "Friend", "Family", "Partner", "Work/School", "Roommate"
     - Emotion: one or two words (e.g., "hurt", "jealous", "overwhelmed")
     - Description: 2-4 sentences, concrete and relatable
     - No extreme content, no self-harm, no illegal instructions
@@ -168,7 +169,7 @@ export function scenarioGenTask(input: {
 }
 
 export function buildScenarioGenPrompt(input: {
-    realm: Exclude<Relationship, "Unspecified">;
+    realm: ScenarioRealm;
     difficulty: 1 | 2 | 3 | 4 | 5;
 }): string {
     return buildJSONPrompt(scenarioGenTask(input), SCENARIO_GENERATION_SCHEMATIC);
