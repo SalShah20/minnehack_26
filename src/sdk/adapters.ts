@@ -1,8 +1,7 @@
 /**
  * Convert raw LLM JSON outputs into app-friendly TypeScropt shapes
  */
-import type { DraftOption } from "./runanywhereClient";
-import { Scenario, ScenarioRealm } from "./prompts";
+import type { DraftOption, DraftOptionsResult, Scenario, RoleplayResult, ScenarioResult, ScenarioRealm} from "../types/api";
 
 const clamp = (n: number, min: number, max: number) => Math.max(min, Math.min(max, n));
 
@@ -53,7 +52,7 @@ const normalizeDraftLabel = (labelRaw: string): DraftOption["label"] => {
 };
 
 
-export function adaptDraftOptions(raw: unknown): {options: DraftOption[]} {
+export function adaptDraftOptions(raw: unknown): DraftOptionsResult {
     const r = raw as RawDraftOptionsResponse;
 
     const arr = Array.isArray(r?.options) ? (r.options as RawDraftOption[]) : [];
@@ -103,7 +102,7 @@ type RawRoleplay = {
     stability?: unknown;
 };
 
-export function adaptRoleplayReply(raw: unknown): {reply: string; stability: number} {
+export function adaptRoleplayReply(raw: unknown): RoleplayResult {
     const r = raw as RawRoleplay;
 
     const reply = normalizeWhitespace(asString(r.reply, ""));
@@ -128,7 +127,7 @@ type RawScenario = {
 export function adaptScenario(
     raw: unknown,
     fallbackInput : { realm: ScenarioRealm; difficulty: 1 | 2 | 3 | 4 | 5}
-): Scenario {
+): ScenarioResult {
     const r = raw as RawScenario;
 
     const realmRaw = r?.scenario?.realm;

@@ -8,7 +8,8 @@
 import { RunAnywhere, SDKEnvironment, ModelCategory, type GenerationOptions } from '@runanywhere/core';
 import { LlamaCPP } from '@runanywhere/llamacpp';
 import { ONNX, ModelArtifactType } from '@runanywhere/onnx';
-import {buildDraftOptionsPrompt, buildRoleplayPrompt, buildScenarioGenPrompt, type Goal, type Relationship, type OtherPersonVibe, type ScenarioRealm, type Scenario} from './prompts';
+import {buildDraftOptionsPrompt, buildRoleplayPrompt, buildScenarioGenPrompt, type Goal, type Relationship, type OtherPersonVibe} from './prompts';
+import type { DraftOption, DraftOptionsResult, RoleplayResult, ScenarioResult, Scenario, ScenarioRealm } from "../types/api";
 
 type InitStatus = "not_started" | "initializing" | "ready" | "error";
 
@@ -164,25 +165,19 @@ async function generateJSON<T>(
     return JSON.parse(jsonStr) as T;
 }
 
-export type DraftOption = {
-    label: "Soft Repair" | "Boundary + Respect" | "Direct & Clear";
-    text: string;
-    whyItWorks: string;
-};
-
 export async function generateDraftOptions(input: {
     scenario: string;
     goal: Goal;
     relationship?: Relationship;
-}): Promise<{options: DraftOption[]}> {
+}): Promise<DraftOptionsResult> {
     const prompt = buildDraftOptionsPrompt(input);
 
     try {
-        return await generateJSON<{options: DraftOption[]}>(prompt, {
+        return await generateJSON<DraftOptionsResult>(prompt, {
             temperature: 0.5,
             maxTokens: 700,
         });
-    } catch (e) {
+    } catch {
         return {
             options: [
                 {
@@ -225,7 +220,7 @@ export async function roleplayReply(input: {
     userMessage: string;
     otherPersonVibe?: OtherPersonVibe;
     speak?: boolean;
-}): Promise<{reply: string; stability: number}> {
+}): Promise<RoleplayResult> {
     const prompt = buildRoleplayPrompt({
         scenario: input.scenario,
         userMessage: input.userMessage,
@@ -243,7 +238,7 @@ export async function roleplayReply(input: {
             await speakText(out.reply);
         }
         return out;
-    } catch (e) {
+    } catch {
         const fallback =  {reply: "I hear you. I need a little time to think about this.", stability: 55};
         if (input.speak) {
             await speakText(fallback.reply);
@@ -255,32 +250,23 @@ export async function roleplayReply(input: {
 export async function generateScenario(input: {
     realm: ScenarioRealm;
     difficulty: 1 | 2 | 3 | 4 | 5;
-}): Promise<Scenario> {
+}): Promise<ScenarioResult> {
     const prompt = buildScenarioGenPrompt({realm: input.realm,
         difficulty: input.difficulty,
     });
     
     try {
-        const out = await generateJSON<Scenario>(prompt, {
+        const out = await generateJSON<ScenarioResult>(prompt, {
             temperature: 0.8,
             maxTokens: 250,
         });
 
-        const realm = out?.scenario?.realm;
-        const diff = out?.scenario?.difficulty;
-        const desc = out?.scenario?.description;
-
-        if (!realm || !diff || !desc) {
-            throw new Error("Scenario JSON missing required fields");
-        }
-
-        out.scenario.difficulty = Math.max(1, Math.min(5, out.scenario.difficulty)) as 1|2|3|4|5;
-        
+        out.scenario.difficulty = Math.max(1, Math.min(5, out.scenario.difficulty)) as 1 | 2 | 3 | 4 | 5;
         out.scenario.emotion = (out.scenario.emotion ?? "").trim();
-        out.scenario.description = out.scenario.description.trim();
-
+        out.scenario.description = (out.scenario.description ?? "").trim();
+        
         return out;
-    } catch (e) {
+    } catch {
         return {
             scenario: {
                 realm: input.realm,

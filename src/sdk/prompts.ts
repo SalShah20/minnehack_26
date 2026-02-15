@@ -13,16 +13,7 @@ export type Goal = "Reconnect" | "Apologize" | "Set Boundary" | "Clarify";
 
 export type OtherPersonVibe = "defensive" | "hurt" | "busy" | "confused";
 
-export type ScenarioRealm = "Friend" | "Family" | "Partner" | "Work/School" | "Roommate";
-
-export type Scenario = {
-    scenario: {
-        realm: ScenarioRealm;
-        difficulty: 1 | 2 | 3 | 4 | 5;
-        emotion: string;
-        description: string;
-    };
-};
+import type { Scenario, ScenarioRealm } from "../types/api";
 
 /**
  * Global rules to ensure consistent prompts and response formats.
