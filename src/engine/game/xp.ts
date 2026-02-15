@@ -5,25 +5,34 @@
  * - XP per level
  * - Level thresholds
  */
-export const XP_PER_LEVEL = 100;
 
-export function calculateLevel(totalXP: number) {
-  return Math.floor(totalXP / XP_PER_LEVEL) + 1;
+export type LevelInfo = {
+  level: number;
+  xpIntoLevel: number;
+  xpForNextLevel: number;
+  progressPercent: number;
 }
 
-export function xpToNextLevel(totalXP: number) {
-    return XP_PER_LEVEL - (totalXP % XP_PER_LEVEL);
-}
+export function calculateLevel(totalXP: number): LevelInfo {
+  const baseXP = 100;
+  const growthRate = 1.4;
 
-export function calculateXP({
-  repairScore,
-  heatScore,
-  comboMultiplier = 1,
-}: {
-  repairScore: number;
-  heatScore: number;
-  comboMultiplier?: number;
-}) {
-  const baseXP = Math.max(0, repairScore - heatScore / 2);
-  return Math.floor(baseXP * comboMultiplier);
+  let level = 1;
+  let xpRemaining = totalXP;
+  let xpForNextLevel = baseXP;
+
+  while (xpRemaining >= xpForNextLevel) {
+    xpRemaining -= xpForNextLevel;
+    level++;
+    xpForNextLevel = Math.round(baseXP * Math.pow(growthRate, level -1));
+  }
+
+  const progressPercent = Math.round((xpRemaining/xpForNextLevel) * 100);
+
+  return {
+    level,
+    xpIntoLevel: xpRemaining,
+    xpForNextLevel,
+    progressPercent,
+  };
 }

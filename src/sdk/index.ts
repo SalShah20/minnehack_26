@@ -6,4 +6,4 @@ export {
     roleplayReply,
     speakText,
     generateScenario,
-} from "./runanywhereClient";
+} from "./runanywhereClient.native";

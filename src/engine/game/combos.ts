@@ -5,23 +5,45 @@
  *
  * Applies XP multipliers.
  */
+import type { ComboType } from "../scoring/scoreMessage";
 
-export function combo(flags: string[]) {
-    let multiplier = 1;
-    let message = null;
+export type ComboMeta = {
+    label: string;
+    description: string;
+    bonusXP: number;
+};
 
-    const hasValidation = flags.includes("validation");
-    const hasOwnership = flags.includes("ownership");
-    const hasBoundary = flags.includes("boundary");
-
-    if (hasValidation && hasOwnership && hasBoundary) {
-        multiplier = 2;
-        message = "Repair Master!"
+export function getComboMeta(combo: ComboType): ComboMeta {
+    switch (combo) {
+        case "validation_ownership":
+            return {
+                label: "Empathy Combo",
+                description: "You validated and took ownership.",
+                bonusXP: 15,
+            };
+        case "validation_boundary":
+            return {
+                label: "Respect Combo",
+                description: "You validated while setting a boundary.",
+                bonusXP: 15,
+            };
+        case "ownership_curiosity":
+            return {
+                label: "Growth Combo",
+                description: "You owned your part and invited dialogue.",
+                bonusXP: 15,
+            }
+        case "full_repair":
+            return {
+                label: "Full Repair Mastery",
+                description: "Validation + ownership + forward movement.",
+                bonusXP: 25,
+            };
+        default:
+            return {
+                label: "No Combo",
+                description: "",
+                bonusXP: 0,
+            };
     }
-    else if ((hasValidation && hasOwnership) || (hasValidation && hasBoundary) || (hasOwnership && hasBoundary)) {
-        multiplier = 1.5;
-        message = "Strong Repair!"
-    }
-
-    return {message, multiplier};
 }
