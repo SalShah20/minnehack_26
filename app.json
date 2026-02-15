@@ -4,6 +4,7 @@
     "slug": "olivebranch",
     "orientation": "portrait",
     "icon": "./assets/images/char_design.png",
+    "description": "Your friend may not love you, but Jesus does!",
     "android": {
       "package": "com.olivebranch.app",
       "adaptiveIcon": {
