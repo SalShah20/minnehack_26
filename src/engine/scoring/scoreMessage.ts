@@ -9,3 +9,4 @@
  *
  * Must remain deterministic.
  */
+const heatScore = 
