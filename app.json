@@ -1,14 +1,26 @@
 {
   "expo": {
-    "name": "olive_branch",
-    "slug": "olive_branch",
+    "name": "Olive Branch",
+    "slug": "olivebranch",
+    "orientation": "portrait",
     "icon": "./assets/images/char_design.png",
     "android": {
+      "package": "com.olivebranch.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/char_design.png",
+        "backgroundColor": "#FFFFFF"
+      },
+      "permissions": []
+    },
+    "ios": {
       "adaptiveIcon": {
         "backgroundColor": "#ffffff",
         "foregroundImage": "./assets/images/char_design.png"
       },
-      "package": "com.anonymous.olive_branch"
+      "bundleIdentifier": "com.salshah.olive-branch",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "web": {
       "favicon": "./assets/images/char_design.png"
@@ -22,6 +34,11 @@
           "backgroundColor": "#ffffff"
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "f69eb153-dc9b-4490-8ade-c7126a15858d"
+      }
+    }
   }
 }

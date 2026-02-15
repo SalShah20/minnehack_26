@@ -13,13 +13,6 @@
  * - Play mode scenario screen
  */
 
-// now implement input to senario
-import React, {useState} from "react";
-import {View,TextInput} from "react-native";
-import ResponseBox from "../play/ResponseBox"; // get resp. methods
-  return (
-    <View style={{ padding: 20 }}>
-      <ResponseBox onSubmit={handleUserSubmit} />
-    </View>
-  );
-}
+
+  // RUN THE LLM FUCNT. AND SAVE TEXT TO SOME STATE VAR WHATEVER THAT IS
+  // USE THAT STATE TO SEND TO SRC SENARIO CARD TO BE DIPLAYED AS A TEXT BOX

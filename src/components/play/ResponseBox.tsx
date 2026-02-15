@@ -27,7 +27,7 @@ export default function ResponseBox({onSubmit}){ // funtion to read in user inpu
   }
 
   return (
-    <View style={{ gap: 10 }}>
+    <View style={{ gap: 12 }}>
       <TextInput
         value={text}
         onChangeText={setText}

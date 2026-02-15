@@ -1,88 +1,60 @@
-// /**
-//  * Animated meter component.
-//  *
-//  * Used for:
-//  * - Heat
-//  * - Repair
-//  * - Stability
-//  *
-//  * Accepts:
-//  * - value (0-100)
-//  * - color
-//  */
+/**
+ * Animated meter component.
+ *
+ * Used for:
+ * - Heat
+ * - Repair
+ * - Stability
+ *
+ * Accepts:
+ * - value (0-100)
+ * - color
+ */
 
-// import React, {useRef, useEffect} from "react";
-// import {View, Text, StyleSheet, Animated} from "react-native";
+import React from "react";
+import {View, Text, StyleSheet} from "react-native";
 
-// type MeterProps = {
-//   label: string;
-//   value: number; // 0–100
-//   barWidth?: number;
-// };
+type MeterProps = {
+  label?: string;
+  value: number; // 0–100
+  color?: string;
+};
 
-// // Type cast fixes TS issue
-// const AnimatedView = Animated.createAnimatedComponent(View as any);
+export default function Meter({label, value}: MeterProps) {
+  const pct = Math.max(0, Math.min(100, Math.round(value)));
 
-// export const Meter: React.FC<MeterProps> = ({ label, value, barWidth = 320 }) => {
-//   const clamped = Math.max(0, Math.min(100, value));
+  return (
+    <View style={styles.wrap}>
+      {label ? <Text style={styles.label}>{label}</Text> : null}
+    <View style={styles.barBg}>
+      <View style={[styles.barFill, {width: `${pct}%`}]} />
+    </View>
+    <Text style={styles.value}>{pct}</Text>
+    </View>
+  );
+}
 
-//   const animated = useRef(new Animated.Value(0)).current;
-
-//   useEffect(() => {
-//     Animated.timing(animated, {
-//       toValue: clamped,
-//       duration: 400,
-//       useNativeDriver: false,
-//     }).start();
-//   }, [clamped, animated]);
-
-//   const width = animated.interpolate({
-//     inputRange: [0, 100],
-//     outputRange: [0, barWidth],
-//   });
-
-//   return (
-//     <View style={styles.container}>
-//       <Text style={styles.title}>{label}</Text>
-
-//       <View style={[styles.frame, {width: barWidth}]}>
-//         <View style={[styles.bar, {width:barWidth }]} />
-//         <AnimatedView style={[styles.fill, {width}]} />
-//       </View>
-//     </View>
-//   );
-// };
-
-// const styles = StyleSheet.create({
-//   container: {
-//     width: 327,
-//     height: 48,
-//     backgroundColor: "#fff",
-//     gap: 8,
-//   },
-//   title: {
-//     fontSize: 16,
-//     fontWeight: "500",
-//     color: "#111",
-//   },
-//   frame: {
-//     height: 39,
-//     position: "relative",
-//   },
-//   bar: {
-//     position: "absolute",
-//     height: 14,
-//     top: 22,
-//     backgroundColor: "#E5E5E5",
-//     borderRadius: 999,
-//   },
-//   fill: {
-//     position: "absolute",
-//     height: 14,
-//     top: 22,
-//     backgroundColor: "#FF8A65",
-//     borderRadius: 999,
-//   },
-// });
-
-// export default Meter;
+const styles = StyleSheet.create({
+  wrap: {
+    marginVertical: 8,
+  },
+  label: {
+    marginBottom: 6,
+    fontWeight: "700"
+  },
+  barBg: {
+    height: 10,
+    borderRadius: 999,
+    backgroundColor: "rgba(0, 0, 0, 0.12)",
+    overflow: "hidden",
+  },
+  barFill: {
+    height: 10,
+    borderRadius: 999,
+    backgroundColor: "rgba(95, 100, 217, 0.9)",
+  },
+  value: {
+    marginTop: 6,
+    opacity: 0.8
+  },
+});

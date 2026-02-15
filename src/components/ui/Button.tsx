@@ -10,54 +10,29 @@
  */
 
 import React from "react";
-import {TouchableOpacity, View, StyleSheet} from "react-native";
+import {Pressable, Text, StyleSheet} from "react-native";
 
+type Props = {
+  title: string;
+  onPress: () => void;
+};
 
-export default function Button ({onPress}){
-    return(
-    <TouchableOpacity style={styles.container} onPress={onPress}>
-        <View style={styles.outerSquare} />
-        <View style={styles.innerCircle} />
-        <Text style={styles.label}>SEND</Text>
-    </TouchableOpacity>
-     );
+export default function Button({title, onPress}: Props) {
+  return (
+    <Pressable onPress={onPress} style={styles.btn}>
+      <Text style={styles.text}>{title}</Text>
+    </Pressable>
+  );  
 }
 
 const styles = StyleSheet.create({
-    container: {
-        width:100,
-        height: 110,
-        positions: "relative",
-    },
-    outerSquare: {
-        position: "absolute", 
-        width: 100,
-        height: 110,
-        backgroundColor: "#B4B7F3",
-        borderRadius: 15, left: 0, top: 0,
-  }
-
-  innerCircle: {
-    position: "absolute",
-    width: 71,
-    height: 71,
-    left: 19,
-    top: 19,
-    backgroundColor: "#D9D9D9",
-    borderRadius: 71 / 2,
-    shadowColor: "rgba(243, 240, 180, 0.25)",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 1,
-    shadowRadius: 4,
+  btn: {
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderRadius: 14,
+    backgroundColor: "rgba(255, 255, 255, 0.14)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.18)",
   },
-
-  label: {
-    position: "absolute",
-    left: 35,
-    top: 43,
-    fontFamily: "Modak",
-    fontSize: 16,
-    lineHeight: 24,
-    color: "black",
-  },
+  text: {color: "#fff", fontWeight: "800", textAlign: "center"},
 });

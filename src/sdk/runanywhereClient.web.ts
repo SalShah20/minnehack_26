@@ -1,49 +1,53 @@
 // src/sdk/runanywhereClient.web.ts
 import type {
-  DraftOption,
   DraftOptionsResult,
   RoleplayResult,
   ScenarioResult,
   ScenarioRealm,
 } from "../types/api";
 import type { Goal, Relationship, OtherPersonVibe } from "./prompts";
-import { buildDraftOptionsPrompt, buildRoleplayPrompt, buildScenarioGenPrompt } from "./prompts";
+import {
+  buildDraftOptionsPrompt,
+  buildRoleplayPrompt,
+  buildScenarioGenPrompt,
+} from "./prompts";
 
-const OPENAI_API_KEY = process.env.EXPO_PUBLIC_OPENAI_API_KEY;
+import { RunAnywhere, SDKEnvironment, TextGeneration } from "@runanywhere/web";
 
-// Very small helper: call OpenAI Responses API and return the text output.
+// Pick a SMALL gguf for demo and put it in: public/models/
+// Then it can be loaded via /models/<file>.gguf
+const MODEL_URL = "/models/qwen2.5-0.5b-instruct-q4_0.gguf";
+const MODEL_ID = "qwen2.5-0.5b";
+
+let initPromise: Promise<void> | null = null;
+
+async function ensureInitialized() {
+  if (initPromise) return initPromise;
+
+  initPromise = (async () => {
+    await RunAnywhere.initialize({
+      environment: SDKEnvironment.Development,
+      debug: true,
+    });
+
+    // Load model once
+    await TextGeneration.loadModel(MODEL_URL, MODEL_ID);
+    console.log("[RunAnywhere/web] Ready + model loaded:", MODEL_ID);
+  })();
+
+  return initPromise;
+}
+
 async function callLLM(prompt: string): Promise<string> {
-  if (!OPENAI_API_KEY) {
-    throw new Error("Missing EXPO_PUBLIC_OPENAI_API_KEY");
-  }
+  await ensureInitialized();
 
-  const res = await fetch("https://api.openai.com/v1/responses", {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${OPENAI_API_KEY}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "gpt-4.1-mini",
-      input: prompt,
-    }),
+  const result = await TextGeneration.generate(prompt, {
+    maxTokens: 700,
+    temperature: 0.5,
   });
 
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`LLM error: ${res.status} ${text}`);
-  }
-
-  const json = await res.json();
-
-  // Responses API returns an array of output items; easiest is to grab "output_text" convenience:
-  // Some SDKs return json.output_text; if not present, fall back to stitching text parts.
-  const outText =
-    (json.output_text as string | undefined) ??
-    (json.output?.flatMap((o: any) => o.content ?? []).map((c: any) => c.text).join("") as string | undefined) ??
-    "";
-
-  return outText.trim();
+  // result.text is what we want
+  return (result.text ?? "").trim();
 }
 
 function extractJSONObject(text: string): any {
@@ -55,10 +59,11 @@ function extractJSONObject(text: string): any {
   return JSON.parse(text.slice(firstBrace, lastBrace + 1));
 }
 
+// API expected by your app
 export async function initRunAnywhere(): Promise<void> {
-  // no-op for web
-  return;
+  await ensureInitialized();
 }
+
 export function getRunAnywhereStatus() {
   return { status: "ready" as const, initError: null as any };
 }

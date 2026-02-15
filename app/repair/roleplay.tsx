@@ -1,206 +1,210 @@
-/**
- * Optional Roleplay Test (Helper Mode).
- *
- * Lets user simulate conversation before sending.
- *
- * Uses:
- * - roleplayReply()
- * - Stability scoring
- */
+import React, { useMemo, useState } from "react";
+import { View, Pressable, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Switch } from "react-native";
+import { roleplayReply } from "../../src/sdk/runanywhereClient.web";
+import type { OtherPersonVibe } from "../../src/sdk/prompts";
+import {Link} from "expo-router";
 
-import React, { useState } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  StyleSheet,
-  TouchableOpacity,
-  ScrollView,
-  ActivityIndicator,
-} from "react-native";
-import { roleplayReply } from "@/sdk";
-import Meter from "@/components/Meter";
+type Params = {
+  scenario?: string;
+  userMessage?: string;
+  otherPersonVibe?: OtherPersonVibe;
+};
 
-export const Roleplay = () => {
-  const [scenario, setScenario] = useState("");
-  const [message, setMessage] = useState("");
-  const [vibe, setVibe] = useState("hurt");
+export default function RepairRoleplayScreen({ route, navigation }: any) {
+  const params: Params = route?.params ?? {};
 
-  const [reply, setReply] = useState("");
-  const [stability, setStability] = useState(50);
+  const [scenario, setScenario] = useState<string>(
+    params.scenario ??
+      "You and a friend had plans. They left you on read all day, but you saw them posting online."
+  );
+
+  const [userMessage, setUserMessage] = useState<string>(
+    params.userMessage ?? "Hey—are we still on for today? I wasn’t sure what happened."
+  );
+
+  const [vibe, setVibe] = useState<OtherPersonVibe>(params.otherPersonVibe ?? "confused");
+  const [speak, setSpeak] = useState(false);
 
   const [loading, setLoading] = useState(false);
+  const [reply, setReply] = useState<string>("");
+  const [stability, setStability] = useState<number | null>(null);
+  const [error, setError] = useState<string>("");
 
-  const handleSimulate = async () => {
-    if (!scenario || !message) return;
+  const vibeOptions: OtherPersonVibe[] = useMemo(
+    () => ["defensive", "hurt", "busy", "confused"],
+    []
+  );
 
+  async function onRun() {
     setLoading(true);
+    setError("");
 
     try {
-      const { reply, stability } = await roleplayReply({
+      const out = await roleplayReply({
         scenario,
-        userMessage: message,
+        userMessage,
         otherPersonVibe: vibe,
-        speak: false,
+        speak,
       });
 
-      setReply(reply);
-      setStability(stability);
-    } catch (err) {
-      console.error(err);
-      alert("Something went wrong");
+      setReply(out.reply);
+      setStability(out.stability);
+    } catch (e: any) {
+      setError(e?.message ?? "Roleplay failed");
+      setReply("");
+      setStability(null);
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Practice Conversation</Text>
+      <Text style={styles.h1}>Roleplay</Text>
+      <Text style={styles.sub}>Test how the other person might respond.</Text>
 
-      {/* Scenario input */}
       <Text style={styles.label}>Scenario</Text>
       <TextInput
-        style={styles.input}
-        placeholder="What happened?"
-        multiline
+        style={[styles.input, styles.multiline]}
         value={scenario}
         onChangeText={setScenario}
-      />
-
-      {/* User message */}
-      <Text style={styles.label}>Your Message</Text>
-      <TextInput
-        style={styles.input}
         multiline
-        placeholder="Type what you might say..."
-        value={message}
-        onChangeText={setMessage}
       />
 
-      {/* Vibe selector (simple buttons) */}
-      <Text style={styles.label}>Other Person's Vibe</Text>
-      <View style={styles.vibeRow}>
-        {["defensive", "hurt", "busy", "confused"].map(v => (
-          <TouchableOpacity
-            key={v}
-            style={[
-              styles.vibeButton,
-              vibe === v && styles.vibeSelected,
-            ]}
-            onPress={() => setVibe(v)}
-          >
-            <Text style={styles.vibeText}>{v}</Text>
-          </TouchableOpacity>
-        ))}
+      <Text style={styles.label}>Your message</Text>
+      <TextInput
+        style={[styles.input, styles.multiline]}
+        value={userMessage}
+        onChangeText={setUserMessage}
+        multiline
+      />
+
+      <View style={styles.row}>
+        <Text style={styles.label}>Other person vibe</Text>
+        <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>
+          {vibeOptions.map((v) => (
+            <TouchableOpacity
+              key={v}
+              onPress={() => setVibe(v)}
+              style={[styles.chip, vibe === v && styles.chipActive]}
+            >
+              <Text style={[styles.chipText, vibe === v && styles.chipTextActive]}>{v}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
       </View>
 
-      {/* Simulate button */}
+      <View style={[styles.row, { alignItems: "center", justifyContent: "space-between" }]}>
+        <Text style={styles.label}>Speak reply</Text>
+        <Switch value={speak} onValueChange={setSpeak} />
+      </View>
+
       <TouchableOpacity
-        style={styles.simulateButton}
-        onPress={handleSimulate}
+        style={[styles.button, loading && styles.buttonDisabled]}
+        onPress={onRun}
         disabled={loading}
       >
-        <Text style={styles.simulateText}>
-          {loading ? "Simulating..." : "Simulate Reply"}
-        </Text>
+        <Text style={styles.buttonText}>{loading ? "Generating..." : "Run roleplay"}</Text>
       </TouchableOpacity>
 
-      {loading && <ActivityIndicator size="large" color="#6B5DD2" />}
+      {error ? <Text style={styles.error}>{error}</Text> : null}
 
-      {/* Stability Meter */}
-      {!!reply && (
-        <>
-          <Meter label="Stability" value={stability} />
+      {reply ? (
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Other person says</Text>
+          <Text style={styles.reply}>{reply}</Text>
 
-          <View style={styles.replyCard}>
-            <Text style={styles.replyLabel}>Their Response</Text>
-            <Text style={styles.replyText}>{reply}</Text>
-          </View>
-        </>
-      )}
+          {stability !== null ? (
+            <Text style={styles.stability}>Stability: {stability}/100</Text>
+          ) : null}
+        </View>
+      ) : null}
+
+      <TouchableOpacity
+        style={[styles.linkBtn]}
+        onPress={() => navigation?.goBack?.()}
+      >
+        <Text style={styles.linkText}>← Back</Text>
+      </TouchableOpacity>
+      {/* Quick navigation row */}
+            <View style={styles.row}>
+              <Link href="/(tabs)/buddy" asChild>
+                <Pressable style={styles.chip}>
+                  <Text style={styles.chipText}>Buddy</Text>
+                </Pressable>
+              </Link>
+      
+              <Link href="/repair/intake" asChild>
+                <Pressable style={styles.chip}>
+                  <Text style={styles.chipText}>Repair Mode</Text>
+                </Pressable>
+              </Link>
+      
+              <Link href="/(tabs)/home" asChild>
+                <Pressable style={styles.chip}>
+                  <Text style={styles.chipText}>Home</Text>
+                </Pressable>
+              </Link>
+            </View>
     </ScrollView>
   );
-};
+}
 
 const styles = StyleSheet.create({
-  container: {
-    padding: 16,
-    gap: 16,
-  },
+  container: { padding: 16, gap: 12 },
+  h1: { fontSize: 24, fontWeight: "700" },
+  sub: { color: "#555", marginBottom: 8 },
 
-  title: {
-    fontSize: 22,
-    fontWeight: "600",
-    color: "#6B5DD2",
-  },
-
-  label: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#6B5DD2",
-  },
-
+  label: { fontSize: 14, fontWeight: "600", marginBottom: 6 },
   input: {
     borderWidth: 1,
-    borderColor: "#E5E5F8",
+    borderColor: "#E5E5E5",
     borderRadius: 12,
     padding: 12,
     backgroundColor: "#fff",
-    minHeight: 80,
+    fontSize: 16,
   },
+  multiline: { minHeight: 90, textAlignVertical: "top" },
 
-  vibeRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-  },
+  row: { gap: 8 },
 
-  vibeButton: {
+  chip: {
     paddingVertical: 8,
     paddingHorizontal: 12,
-    backgroundColor: "#E5E5F8",
-    borderRadius: 10,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: "#DDD",
+    backgroundColor: "#fff",
   },
+  chipActive: { backgroundColor: "#6B5DD2", borderColor: "#6B5DD2" },
+  chipText: { color: "#333", fontWeight: "600" },
+  chipTextActive: { color: "#fff" },
 
-  vibeSelected: {
-    backgroundColor: "#FFF6A5",
-  },
-
-  vibeText: {
-    color: "#6B5DD2",
-    fontWeight: "600",
-  },
-
-  simulateButton: {
-    backgroundColor: "#FFF6A5",
-    paddingVertical: 14,
+  button: {
+    backgroundColor: "#FF8A65",
+    paddingVertical: 12,
     borderRadius: 12,
     alignItems: "center",
+    marginTop: 4,
   },
+  buttonDisabled: { opacity: 0.6 },
+  buttonText: { color: "#111", fontWeight: "700", fontSize: 16 },
 
-  simulateText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#6B5DD2",
+  card: {
+    borderWidth: 1,
+    borderColor: "#EEE",
+    borderRadius: 16,
+    padding: 14,
+    backgroundColor: "#fff",
+    gap: 8,
+    marginTop: 8,
   },
+  cardTitle: { fontWeight: "700" },
+  reply: { fontSize: 16, lineHeight: 22 },
+  stability: { marginTop: 4, fontWeight: "700" },
 
-  replyCard: {
-    backgroundColor: "#E5E5F8",
-    padding: 16,
-    borderRadius: 12,
-  },
+  error: { color: "crimson" },
 
-  replyLabel: {
-    fontWeight: "600",
-    marginBottom: 6,
-    color: "#6B5DD2",
-  },
-
-  replyText: {
-    fontSize: 15,
-    color: "#333",
-  },
+  linkBtn: { paddingVertical: 10 },
+  linkText: { color: "#6B5DD2", fontWeight: "700" },
 });
-
-export default Roleplay;
