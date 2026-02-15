@@ -6,6 +6,8 @@
  * Used to visually underline text.
  */
 
+import { HEAT_PATTERNS, REPAIR_PATTERNS } from "@/src/data/phrases";
+
 export type Highlight = {
     text: string;
     type: "heat" | "repair";
@@ -16,17 +18,10 @@ export type Highlight = {
 
 export function findHighlights(message: string): Highlight[] {
     const highlights: Highlight[] = [];
-    const normalized = message.toLowerCase();
 
-    const heatPatterns = [
-        {regex: /\byou always\b/gi, category: "blame"},
-        { regex: /\byou never\b/gi, category: "blame" },
-        { regex: /\byou don't care\b/gi, category: "accusations" },
-        { regex: /\bi'm done\b/gi, category: "threats" },
-    ];
-
-    for (const {regex, category} of heatPatterns) {
-        let match;
+    for (const {regex, category} of HEAT_PATTERNS) {
+        regex.lastIndex = 0;
+        let match: RegExpExecArray | null;
         while ((match = regex.exec(message)) !== null) {
             highlights.push({
                 text: match[0],
@@ -38,14 +33,9 @@ export function findHighlights(message: string): Highlight[] {
         }
     }
 
-    const repairPatterns = [
-        { regex: /\bi understand\b/gi, category: "validation" },
-        { regex: /\bi'm sorry\b/gi, category: "ownership" },
-        { regex: /\bcan we talk\b/gi, category: "curiosity" },
-    ];
-
-    for (const { regex, category } of repairPatterns) {
-        let match;
+    for (const { regex, category } of REPAIR_PATTERNS) {
+        regex.lastIndex = 0;
+        let match: RegExpExecArray | null;
         while ((match = regex.exec(message)) != null) {
             highlights.push({
                 text: match[0],
