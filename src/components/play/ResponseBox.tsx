@@ -16,22 +16,22 @@
  */
 
 import React, {useState} from "react";
-import {View,TextInput} from "react-Native";
+import {View,TextInput} from "react-native";
 import Button from "../ui/Button"; // get button methods
 export default function ResponseBox({onSubmit}){ // funtion to read in user input
-    const [text, setText] = userResponse("");
-
-  function handleSend() {
+    const [text, setText] = userState(""); // state to hold user input?
+    
+    function handleSend() {
     onSubmit(text);
-    setText("");
+    setText(""); // holds user input, once submitted it will reset for new input
   }
 
   return (
-    <View style={{ gap: 12 }}>
+    <View style={{ gap: 10 }}>
       <TextInput
         value={text}
         onChangeText={setText}
-        placeholder="Type your response..."
+        placeholder="How would you respond to this senario?"
         style={{
           borderWidth: 1,
           borderRadius: 8,

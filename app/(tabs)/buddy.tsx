@@ -64,12 +64,12 @@ export default function BuddyScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f7f7f7" },
-  content: { alignItems: "center", padding: 20 },
-  title: { fontSize: 26, fontWeight: "600", marginBottom: 20 },
-  section: { width: "100%", marginTop: 30 },
-  sectionTitle: { fontSize: 18, fontWeight: "600", marginBottom: 10 },
-  badgeGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
+  container: {flex: 1, backgroundColor: "#f7f7f7"},
+  content: {alignItems: "center", padding: 20},
+  title: {fontSize: 26, fontWeight: "600", marginBottom: 20},
+  section: {width: "100%", marginTop: 30},
+  sectionTitle: {fontSize: 18, fontWeight: "600", marginBottom: 10},
+  badgeGrid: {flexDirection: "row", flexWrap: "wrap", gap: 10},
   badge: {
     padding: 12,
     borderRadius: 12,

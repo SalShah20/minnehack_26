@@ -14,24 +14,28 @@ import {TouchableOpacity, View, StyleSheet} from "react-native";
 
 
 export default function Button ({onPress}){
-    <TouchableOpacity style={StyleSheet.container} onPress={onPress}>
-    <View style = {StyleSheet.outerSqr} />
-    <View style={StyleSheet.innerCirc}>
-    <Text style={StyleSheet.label}>SEND</Text>
-    <TouchableOpacity>
-        );
+    return(
+    <TouchableOpacity style={styles.container} onPress={onPress}>
+        <View style={styles.outerSquare} />
+        <View style={styles.innerCircle} />
+        <Text style={styles.label}>SEND</Text>
+    </TouchableOpacity>
+     );
 }
 
 const styles = StyleSheet.create({
     container: {
-        width:100, height: 110, positions: "reletive",
+        width:100,
+        height: 110,
+        positions: "relative",
     },
-    outerQuare: {
-        positions: " absolute", 
-        width: 100, height: 110, backgroundColor: "#B4B7F3", borderRadius: 15,
-    left: 0,
-    top: 0,
-  },
+    outerSquare: {
+        position: "absolute", 
+        width: 100,
+        height: 110,
+        backgroundColor: "#B4B7F3",
+        borderRadius: 15, left: 0, top: 0,
+  }
 
   innerCircle: {
     position: "absolute",
